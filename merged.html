@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+<link href="http://code.google.com/apis/maps/documentation/javascript/examples/default.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false&libraries=places"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    #map {
+      height: 100%;
+    }
+    .controls {
+      margin-top: 10px;
+      border: 1px solid transparent;
+      border-radius: 2px 0 0 2px;
+      box-sizing: border-box;
+      -moz-box-sizing: border-box;
+      height: 32px;
+      outline: none;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    }
+    #origin-input,
+    #destination-input {
+      background-color: #fff;
+      font-family: Roboto;
+      font-size: 15px;
+      font-weight: 300;
+      margin-left: 12px;
+      padding: 0 11px 0 13px;
+      text-overflow: ellipsis;
+      width: 200px;
+    }
+
+#origin-input:focus,
+    #destination-input:focus {
+      border-color: #4d90fe;
+    }
+    #mode-selector {
+      color: #fff;
+      background-color: #4d90fe;
+      margin-left: 12px;
+      padding: 5px 11px 0px 11px;
+    }
+    #mode-selector label {
+      font-family: Roboto;
+      font-size: 13px;
+      font-weight: 300;
+    }
+
+</style>
+<script type="text/javascript">
+var directionsService = new google.maps.DirectionsService();
+var map, directionsDisplay;
+
+  function initialize() {
+
+    directionsDisplay = new google.maps.DirectionsRenderer();
+    var origin_place_id = null;
+    var destination_place_id = null;
+    var travel_mode = 'DRIVING';
+    var myOptions = {
+      mapTypeControl: false,
+      zoom: 17,
+      center: new google.maps.LatLng(37.33,-121.88),
+      mapTypeId: google.maps.MapTypeId.ROADMAP,
+    };
+    map = new google.maps.Map(document.getElementById("map"), myOptions);
+    directionsDisplay.setMap(map);
+
+    var infoWindow = new google.maps.InfoWindow();
+    var origin_input = document.getElementById('origin-input');
+    var destination_input = document.getElementById('destination-input');
+
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(origin_input);
+    map.controls[google.maps.ControlPosition.TOP_LEFT].push(destination_input);
+
+    var origin_autocomplete = new google.maps.places.Autocomplete(origin_input);
+    origin_autocomplete.bindTo('bounds', map);
+    var destination_autocomplete = new google.maps.places.Autocomplete(destination_input);
+    destination_autocomplete.bindTo('bounds', map);
+
+    function expandViewportToFitPlace(map, place) {
+      if (place.geometry.viewport) {
+        map.fitBounds(place.geometry.viewport);
+      } else {
+        map.setCenter(place.geometry.location);
+        map.setZoom(17);
+      }
+    }
+
+    origin_autocomplete.addListener('place_changed', function() {
+    var place = origin_autocomplete.getPlace();
+      if (!place.geometry) {
+        window.alert("Autocomplete's returned place contains no geometry");
+        return;
+      }
+      expandViewportToFitPlace(map, place);
+
+    // If the place has a geometry, store its place ID and route if we have
+      // the other place ID
+      origin_place_id = place.place_id;
+      route(origin_place_id, destination_place_id, travel_mode,
+            directionsService, directionsDisplay);
+    });
+
+    destination_autocomplete.addListener('place_changed', function() {
+      var place = destination_autocomplete.getPlace();
+      if (!place.geometry) {
+        window.alert("Autocomplete's returned place contains no geometry");
+        return;
+      }
+
+      expandViewportToFitPlace(map, place);
+      // If the place has a geometry, store its place ID and route if we have
+      // the other place ID
+      destination_place_id = place.place_id;
+      route(origin_place_id, destination_place_id,travel_mode,
+            directionsService, directionsDisplay);
+    });
+
+    function route(origin_place_id, destination_place_id, travel_mode,
+                   directionsService, directionsDisplay) {
+      if (!origin_place_id || !destination_place_id) {
+        return;
+      }
+
+      directionsService.route({
+        origin: {'placeId': origin_place_id},
+        destination: {'placeId': destination_place_id},
+        travelMode: travel_mode
+      }, function(response, status) {
+        if (status === 'OK') {
+          directionsDisplay.setDirections(response);
+        } else {
+          window.alert('Directions request failed due to ' + status);
+        }
+      });
+
+    }
+
+var results = [
+{"start":{"lng":-121.8871637,"lat":37.3314516},"rating":4,"location":{"lng":-121.8775357,"lat":37.3359996},"end":{"lng":-121.8708577,"lat":37.3391919},"title":"East San Carlos Street, San Jose,CA"},
+{"start":{"lng":-121.8849178,"lat":37.3285752},"rating":8,"location":{"lng":-121.8656349,"lat":37.3391188},"end":{"lng":-121.8477697,"lat":37.350073},"title":"East William Street, San Jose,CA"},
+{"start":{"lng":-121.909116,"lat":37.316089},"rating":8,"location":{"lng":-121.8906261,"lat":37.3361554},"end":{"lng":-121.8738176,"lat":37.3605257},"title":"South 1st Street, San Jose,CA"},
+{"start":{"lng":-121.8895023,"lat":37.3185933},"rating":2,"location":{"lng":-121.8827559,"lat":37.3275863},"end":{"lng":-121.875632,"lat":37.3366932},"title":"South 2nd Street, San Jose,CA"},
+{"start":{"lng":-121.8887112,"lat":37.3196173},"rating":7,"location":{"lng":-121.8817068,"lat":37.3280854},"end":{"lng":-121.8743858,"lat":37.3371729},"title":"South 3rd Street, San Jose,CA"},
+{"start":{"lng":-121.887791,"lat":37.3270078},"rating":6,"location":{"lng":-121.8839118,"lat":37.3329707},"end":{"lng":-121.8803484,"lat":37.338746},"title":"South 4th Street, San Jose,CA"},
+{"start":{"lng":-121.8859366,"lat":37.3217081},"rating":0,"location":{"lng":-121.8797949,"lat":37.3294094},"end":{"lng":-121.8740818,"lat":37.33732690000001},"title":"South 5th Street, San Jose,CA"},
+{"start":{"lng":-121.886414,"lat":37.3199585},"rating":0,"location":{"lng":-121.8784918,"lat":37.329627},"end":{"lng":-121.8717121,"lat":37.34002},"title":"South 6th Street, San Jose,CA"},
+{"start":{"lng":-121.8841987,"lat":37.3035143},"rating":8,"location":{"lng":-121.8703992,"lat":37.3206506},"end":{"lng":-121.8546785,"lat":37.339213},"title":"South 7th Street, San Jose,CA"},
+{"start":{"lng":-121.884216,"lat":37.321785},"rating":2,"location":{"lng":-121.8763644,"lat":37.3306079},"end":{"lng":-121.869594,"lat":37.340553},"title":"South 8th Street, San Jose,CA"},
+{"start":{"lng":-121.8815112,"lat":37.3052006},"rating":5,"location":{"lng":-121.8672543,"lat":37.3221709},"end":{"lng":-121.8512419,"lat":37.3406964},"title":"South 10t Street, San Jose,CA"},
+{"start":{"lng":-121.8860095,"lat":37.33002949999999},"rating":5,"location":{"lng":-121.8785649,"lat":37.3335517},"end":{"lng":-121.8704058,"lat":37.3374963},"title":"East San Salvador Street, San Jose,CA"},
+{"start":{"lng":-121.8838104,"lat":37.3270078},"rating":6,"location":{"lng":-121.8768895,"lat":37.3303562},"end":{"lng":-121.8704059,"lat":37.3334505},"title":"East Reed Street, San Jose,CA"},
+{"start":{"lng":-121.8902258,"lat":37.325964},"rating":2,"location":{"lng":-121.8883422,"lat":37.3271646},"end":{"lng":-121.8860515,"lat":37.3289349},"title":"Balbach Street, San Jose,CA"},
+{"start":{"lng":-121.8821039,"lat":37.32231640000001},"rating":8,"location":{"lng":-121.875305,"lat":37.3311067},"end":{"lng":-121.868546,"lat":37.3402014},"title":"South 9th Street, San Jose,CA"}
+    ];
+
+      infoWindow = new google.maps.InfoWindow();
+
+       function displayMarkers(){
+         //console.log(results);
+         var bounds = new google.maps.LatLngBounds();
+
+         for(var i=0; i<results.length; i++)
+         {
+           var ic;
+           var latlng = new google.maps.LatLng(results[i].location.lat, results[i].location.lng);
+           var rating= results[i].rating;
+           var title = results[i].title;
+
+           if(rating >= 8){
+                   ic="greenIcon.png";
+           }
+           else if(rating >=4 && rating < 8){
+                   ic="yellowIcon.png";
+           }
+           else if(rating < 4 ){
+                   ic="redIcon.png";
+           }
+           createMarker(latlng,rating,title, ic);
+           ic= null;
+           bounds.extend(latlng);
+         }
+           map.fitBounds(bounds);
+       }
+
+       function createMarker(latlng,rating, title, icon){
+             marker = new google.maps.Marker({
+             map: map,
+             position: latlng,
+             title:title,
+             icon:icon,
+             clickable: true
+             //icon: "https://chart.googleapis.com/chart?chst=d_map_pin_letter_withshadow&chld=" + (i + 1) + "|"+iconcolor+"|000000",
+             //type: 'flat',
+             //icon_color: '#ff0000',
+             //label_color: '#ffffff',
+             //width: '20',
+             //height: '20',
+             //label_size: '11',
+
+         });
+             //var iconcolor = google_map_item[i].iconColor;
+           google.maps.event.addListener(marker, 'click', function() {
+               infoWindow.setContent("<b>" + title + "</b>" + "<br> Rating: " + rating);
+               infoWindow.open(map,this);
+           });
+       }
+
+
+      // Event that closes the InfoWindow with a click on the map
+      google.maps.event.addListener(map, 'click', function() {
+         infoWindow.close();
+      });
+
+
+       displayMarkers();
+
+       /*var start = '37.7683909618184, -122.51089453697205';
+       var end = '41.850033, -87.6500523';
+       var request = {
+         origin:start,
+         destination:end,
+         travelMode: google.maps.DirectionsTravelMode.DRIVING
+       };
+       directionsService.route(request, function(response, status) {
+         if (status == google.maps.DirectionsStatus.OK) {
+           directionsDisplay.setDirections(response);
+           //var myRoute = response.routes[0];
+           //var txtDir = '';
+           //for (var i=0; i<myRoute.legs[0].steps.length; i++) {
+           //  txtDir += myRoute.legs[0].steps[i].instructions+"<br />";
+           //}
+           //document.getElementById('directions').innerHTML = txtDir;
+         }
+       });*/
+     // end of init
+
+     }// end of initialize
+          /*var ic='';
+            if(res[i].Rating >= 8){
+                    ic="redIcon.png"
+            }
+            else if(4 <= res[i].Rating < 8 ){
+                    ic="redIcon.png"
+            }
+            else if(res[i].Rating <4){
+                    ic="redIcon.png"
+            }
+             marker = new google.maps.Marker({
+            position: res[i].geometry.location,
+             icon:ic,
+              map: map
+          });
+        }else{
+          alert("Geocode was not successful" + status);
+        }
+      });
+    }}*/
+</script>
+</head>
+<body onload="initialize()">
+    <input id="origin-input" class="controls" type="text" placeholder="Enter an origin location">
+    <input id="destination-input" class="controls" type="text" placeholder="Enter a destination location">
+  <div id="map"></div>
+
+</body>
+</html>
